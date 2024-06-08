@@ -1,0 +1,23 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload and Filter Players</title>
+</head>
+<body>
+    <h1>Upload CSV</h1>
+    <form action="/upload-csv/" enctype="multipart/form-data" method="post">
+        <input name="file" type="file">
+        <input type="submit">
+    </form>
+    
+    <h1>Filter Players</h1>
+    <form action="/filter/" method="get">
+        <label for="player">Player:</label>
+        <input type="text" id="player" name="player">
+        <label for="nation">Nation:</label>
+        <input type="text" id="nation" name="nation">
+        <input type="submit">
+    </form>
+</body>
+</html>
