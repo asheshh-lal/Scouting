@@ -29,6 +29,31 @@
             <button type="submit" class="btn btn-primary btn-block">Submit</button>
         </form>
     </div>
+
+    <script>
+        // Get the select element
+        const selectElement = document.getElementById("player");
+    
+        // Get all the options inside the select element
+        const options = selectElement.getElementsByTagName("option");
+    
+        // Add an event listener for input event on the select element
+        selectElement.addEventListener("input", function () {
+            // Get the input value
+            const inputValue = this.value.toLowerCase();
+    
+            // Loop through all options and show/hide based on input value
+            for (let i = 0; i < options.length; i++) {
+                const option = options[i];
+                const optionValue = option.textContent.toLowerCase();
+                if (optionValue.includes(inputValue)) {
+                    option.style.display = "block";
+                } else {
+                    option.style.display = "none";
+                }
+            }
+        });
+    </script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

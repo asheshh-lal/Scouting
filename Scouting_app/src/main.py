@@ -70,7 +70,7 @@ async def submit_player(request: Request, player: str = Form(...)):
     
 async def find_similar_players(id):
     async with aiosqlite.connect(DATABASE_URL) as db:
-        cursor = await db.execute("SELECT * FROM data")
+        cursor = await db.execute("SELECT DISTINCT * FROM data")
         rows = await cursor.fetchall()
 
         # Convert rows to a pandas DataFrame
