@@ -1,10 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request, Form
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 import csv
 import asyncio
+import aiosqlite
 from aiosqlite import connect as aiosqlite_connect
 
 DATABASE_URL = "player.db"
 app = FastAPI()
+templates = Jinja2Templates(directory="templates")
 
 # Create a lock to synchronize access to the database during startup
 database_lock = asyncio.Lock()
@@ -36,18 +40,21 @@ async def upload_csv_on_startup():
                 )
                 await db.commit()
 
-@app.get("/")
-async def home():
-    return {"message": "Welcome to the CSV uploader!"}
+@app.get("/", response_class=HTMLResponse)
+async def get_players(request: Request):
+    async with aiosqlite.connect(DATABASE_URL) as db:
+        cursor = await db.execute("SELECT DISTINCT Player FROM data")
+        players = await cursor.fetchall()
+        player_names = [row[0] for row in players]
+    return templates.TemplateResponse("index.html", {"request": request, "players": player_names})
 
 @app.get("/players")
-async def get_players():
-    async with aiosqlite_connect(DATABASE_URL) as db:
-        async with db.execute("SELECT * FROM data") as cursor:
-            rows = await cursor.fetchall()
-            columns = [description[0] for description in cursor.description]
+async def get_all_players():
+    async with aiosqlite.connect(DATABASE_URL) as db:
+        cursor = await db.execute("SELECT * FROM data")
+        rows = await cursor.fetchall()
+    return {"players": rows}
 
-    # Format the data as a list of dictionaries
-    players = [dict(zip(columns, row)) for row in rows]
-
-    return {"players": players}
+@app.post("/submit_player")
+async def submit_player(player: str = Form(...)):
+    return {"selected_player": player}
