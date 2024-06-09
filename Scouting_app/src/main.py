@@ -1,68 +1,63 @@
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from database import get_db, engine
-from models import Base, Player
-from schemas import PlayerBase
-import crud
+from fastapi import FastAPI
 import csv
-import io
-from starlette.requests import Request
+import asyncio
+from aiosqlite import connect as aiosqlite_connect
 
+# SQLite database connection string
+DATABASE_URL = "player.db"
+
+# Create FastAPI app
 app = FastAPI()
 
-# Mount the static directory
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Create a lock to synchronize access to the database during startup
+database_lock = asyncio.Lock()
 
-# Initialize templates
-templates = Jinja2Templates(directory="templates")
+def quote_column_name(column_name):
+    # Enclose the column name in double quotes to handle special characters
+    return f'"{column_name}"'
 
-# Create the database tables
 @app.on_event("startup")
-async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    await load_data_from_csv()
+async def upload_csv_on_startup():
+    # Acquire the lock to ensure exclusive access to the database during startup
+    async with database_lock:
+        # Open the CSV file and read data
+        with open("data.csv", "r") as file:
+            reader = csv.DictReader(file)
+            rows = list(reader)
 
-async def load_data_from_csv():
-    async for db in get_db():
-        try:
-            with open('data.csv', newline='', encoding='utf-8') as csvfile:
-                csv_reader = csv.DictReader(csvfile)
-                for row in csv_reader:
-                    # Handle null values or empty strings as 0
-                    for key, value in row.items():
-                        if value is None or value == "":
-                            row[key] = 0
-                    player_data = PlayerBase(**row)
-                    await crud.create_player(db=db, player=player_data)
-        finally:
-            await db.close()
+            # Extract column names from the CSV file and quote them
+            columns = [quote_column_name(column) for column in reader.fieldnames]
 
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+            # Connect to the database
+            async with aiosqlite_connect(DATABASE_URL) as db:
+                # Create table with dynamically determined columns
+                await db.execute(f'''
+                    CREATE TABLE IF NOT EXISTS data (
+                        {", ".join([f"{column} TEXT" for column in columns])}
+                    )
+                ''')
+                await db.commit()
 
-@app.post("/upload-csv/")
-async def upload_csv(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
-    contents = await file.read()
-    csv_reader = csv.DictReader(io.StringIO(contents.decode('utf-8')))
-    
-    players = []
-    for row in csv_reader:
-        # Handle null values or empty strings as 0
-        for key, value in row.items():
-            if value is None or value == "":
-                row[key] = 0
-        player_data = PlayerBase(**row)
-        players.append(await crud.create_player(db=db, player=player_data))
-    
-    return players
+                # Insert data into the database
+                await db.executemany(
+                    f"INSERT INTO data ({', '.join(columns)}) VALUES ({', '.join(['?' for _ in columns])})",
+                    [tuple(row[column.strip('"')] for column in columns) for row in rows]
+                )
+                await db.commit()
 
-@app.get("/filter/", response_class=HTMLResponse)
-async def filter_players(request: Request, player: str = None, nation: str = None, db: AsyncSession = Depends(get_db)):
-    players = await crud.get_players(db, player=player, nation=nation)
-    return templates.TemplateResponse("filtered.html", {"request": request, "players": players})
+@app.get("/")
+async def home():
+    return {"message": "Welcome to the CSV uploader!"}
+
+@app.get("/players")
+async def get_players():
+    async with aiosqlite_connect(DATABASE_URL) as db:
+        # Fetch all data from the table
+        async with db.execute("SELECT * FROM data") as cursor:
+            rows = await cursor.fetchall()
+            columns = [description[0] for description in cursor.description]
+
+    # Format the data as a list of dictionaries
+    players = [dict(zip(columns, row)) for row in rows]
+
+    return {"players": players}
