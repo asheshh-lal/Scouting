@@ -1,8 +1,14 @@
 import csv
 import json
+import base64
 import asyncio
 import aiosqlite
+
+from io import BytesIO
 import pandas as pd
+import matplotlib.pyplot as plt
+from mplsoccer import Radar, FontManager, grid
+
 from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
@@ -10,11 +16,12 @@ from aiosqlite import connect as aiosqlite_connect
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
 
+
 DATABASE_URL = "player.db"
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-# Create a lock to synchronize access to the database during startup
+#lock to synchronize access to the db
 database_lock = asyncio.Lock()
 
 def quote_column_name(column_name):
@@ -22,7 +29,7 @@ def quote_column_name(column_name):
 
 @app.on_event("startup")
 async def upload_csv_on_startup():
-    # Acquire the lock to ensure exclusive access to the database during startup
+    # Acquire lock to ensure access to the database during startup
     async with database_lock:
         with open("Final_player_cluster_df.csv", "r") as file:
             reader = csv.DictReader(file)
@@ -65,14 +72,19 @@ async def submit_player(request: Request, player: str = Form(...)):
         row = await cursor.fetchone()
     rk = row[0] if row else "No Rk found for this player"
     similar_players = await find_similar_players(rk)
-    return templates.TemplateResponse("similar_players.html", {"request": request, "players": similar_players})
+    
+    encoded_images = []
+    for img_bytes in similar_players:
+        img_base64 = base64.b64encode(img_bytes.getvalue()).decode('utf-8')
+        encoded_images.append(img_base64)
+    
+    return templates.TemplateResponse("similar_players.html", {"request": request, "players": encoded_images})
+
     
 async def find_similar_players(id):
     async with aiosqlite.connect(DATABASE_URL) as db:
         cursor = await db.execute("SELECT DISTINCT * FROM data")
         rows = await cursor.fetchall()
-
-        # Convert rows to a pandas DataFrame
         columns = [desc[0] for desc in cursor.description]
         df = pd.DataFrame(rows, columns=columns)
 
@@ -114,26 +126,61 @@ async def find_similar_players(id):
         df_player_norm[selected_features] = scaler.fit_transform(df_player_norm[selected_features])
 
         df_player_norm['Cluster'] = df['Cluster']
-        # Select the player of interest (target)
         target_player = df_player_norm[df_player_norm['Rk'] == id]
         target_features = target_player[selected_features]
-        target_cluster = target_player['Cluster'].iloc[0]  # Get the cluster label of the target player
+        target_cluster = target_player['Cluster'].iloc[0]  
 
         similar_players_cluster_df = df_player_norm[df_player_norm['Cluster'] == target_cluster].copy()
         # Calculate cosine similarity between the target player and other players in the same cluster
         similarities = cosine_similarity(target_features, similar_players_cluster_df[selected_features])
         similarities = similarities[0] * 100
-        # Add the 'Similarity' column to the dataframe using .loc
         similar_players_cluster_df.loc[:, 'Similarity'] = similarities
-
-        # Sort the DataFrame based on the 'Similarity' column in descending order
         similar_players_cluster_df = similar_players_cluster_df.sort_values(by='Similarity', ascending=False)
-
-        # Select from the second to the 11th element (remembering that indexing starts from 0)
         similar_players_cluster_df = similar_players_cluster_df.iloc[1:11]
-
-        # Retrieve the non-normalized data from the original dataframe
         similar_players_cluster_df = df[df['Rk'].isin(similar_players_cluster_df['Rk'])]
 
-    return similar_players_cluster_df
+        params = ['Expected xG', 'Performance G+A', 'Expected xG', 
+              'Standard Dist', 'Performance CS', 'Total Att', 
+              'Aerial Duels Won', 'Standard SoT%', 'Total PrgDist']
+        low = []
+        high = []
 
+        for i in params:
+            low.append(similar_players_cluster_df[i].min())
+            high.append(similar_players_cluster_df[i].max())
+            
+        radar = Radar(params, low, high,
+                    round_int=[False]*len(params),
+                    num_rings=4,
+                    ring_width=0.5, center_circle_radius=0.5)
+
+        images = []
+        for i in range(len(similar_players_cluster_df)):
+            player_name = similar_players_cluster_df.iloc[i]['Player']
+            player_val = similar_players_cluster_df.iloc[i][params].values
+            fig, ax = radar.setup_axis()  
+            rings_inner = radar.draw_circles(ax=ax, facecolor='#ffb2b2', edgecolor='#fc5f5f') 
+            radar_output = radar.draw_radar(player_val, ax=ax,
+                                            kwargs_radar={'facecolor': '#aa65b2'},
+                                            kwargs_rings={'facecolor': '#66d8ba'})  
+            radar_poly, rings_outer, vertices = radar_output
+            range_labels = radar.draw_range_labels(ax=ax, fontsize=15) 
+            param_labels = radar.draw_param_labels(ax=ax, fontsize=15)  
+            title = ax.set_title(f'Radar Chart for {player_name}', fontsize=20)
+            title.set_position([0.5, 1.05])  # Adjust the position (x, y) relative to the axes (0-1)
+
+            img_bytes = BytesIO()
+            plt.savefig(img_bytes, format='png')
+            plt.close(fig) 
+            img_bytes.seek(0)
+            images.append(img_bytes)
+
+        return images
+
+def render_radar_charts(images):
+    for img_bytes in images:
+        img = plt.imread(img_bytes, format='png')
+        plt.figure(figsize=(6, 6))
+        plt.imshow(img)
+        plt.axis('off')
+        plt.show()
