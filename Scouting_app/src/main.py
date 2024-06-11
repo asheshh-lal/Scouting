@@ -9,7 +9,6 @@ from fastapi.responses import HTMLResponse
 from aiosqlite import connect as aiosqlite_connect
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.cluster import KMeans # Kmeans clustering
 
 DATABASE_URL = "player.db"
 app = FastAPI()
@@ -25,7 +24,7 @@ def quote_column_name(column_name):
 async def upload_csv_on_startup():
     # Acquire the lock to ensure exclusive access to the database during startup
     async with database_lock:
-        with open("raw.csv", "r") as file:
+        with open("Final_player_cluster_df.csv", "r") as file:
             reader = csv.DictReader(file)
             rows = list(reader)
             columns = [quote_column_name(column) for column in reader.fieldnames]
@@ -113,15 +112,6 @@ async def find_similar_players(id):
 
         scaler = MinMaxScaler()
         df_player_norm[selected_features] = scaler.fit_transform(df_player_norm[selected_features])
-
-        num_clusters = 4
-        kmeans_model = KMeans(n_clusters=num_clusters, random_state=42)
-        kmeans_model.fit(df_player_norm[selected_features])
-        cluster_labels = kmeans_model.labels_
-
-        # Add cluster labels to the player dataframe
-        df_player_norm['Cluster'] = cluster_labels
-        df['Cluster'] = cluster_labels
 
         df_player_norm['Cluster'] = df['Cluster']
         # Select the player of interest (target)
