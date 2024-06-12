@@ -1,31 +1,38 @@
-<!-- <!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Similar Players</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendation</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .player-card {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1>Similar Players</h1>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    {% for col in players.columns %}
-                        <th>{{ col }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for player in players.iterrows() %}
-                    <tr>
-                        {% for col in players.columns %}
-                            <td>{{ player[1][col] }}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <a href="/" class="btn btn-primary">Back</a>
-    </div>
+    <div class="container">
+        <h1 class="mt-4 mb-4">Player Recommendation</h1>
+        <div class="row">
+            {% for player_name, img_path_for_template in radar_charts %}
+            <div class="col-md-6">
+                <div class="card player-card">
+                    <h5 class="card-header">{{ player_name }}</h5>
+                    <div class="card-body">
+                        <!-- Correctly reference the images from the static directory -->
+                        <img src="../static/{{ img_path_for_template }}" class="card-img-top" alt="Radar Chart for {{ player_name }}">
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>     
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
-</html> -->
+</html>
