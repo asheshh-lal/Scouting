@@ -152,7 +152,7 @@ async def generate_radar_charts(similar_players_df):
     radar_charts = []
 
     for idx in range(len(similar_players_df)):
-        player_name = similar_players_df.iloc[idx]['Player'].replace(" ", "_")
+        player_name = similar_players_df.iloc[idx]['Player']
         player_val = similar_players_df.iloc[idx][params].values
         fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
         

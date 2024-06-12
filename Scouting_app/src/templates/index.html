@@ -1,61 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Player</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body {
-            padding-top: 50px;
-        }
-        .container {
-            max-width: 600px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1 class="text-center">Select a Player</h1>
-        <form action="/submit_player" method="post">
-            <div class="form-group">
-                <label for="player">Player</label>
-                <select class="form-control" id="player" name="player">
-                    {% for player in players %}
-                        <option value="{{ player }}">{{ player }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">Submit</button>
-        </form>
-    </div>
+{% extends "base.html" %}
 
-    <script>
-        // Get the select element
-        const selectElement = document.getElementById("player");
-    
-        // Get all the options inside the select element
-        const options = selectElement.getElementsByTagName("option");
-    
-        // Add an event listener for input event on the select element
-        selectElement.addEventListener("input", function () {
-            // Get the input value
-            const inputValue = this.value.toLowerCase();
-    
-            // Loop through all options and show/hide based on input value
-            for (let i = 0; i < options.length; i++) {
-                const option = options[i];
-                const optionValue = option.textContent.toLowerCase();
-                if (optionValue.includes(inputValue)) {
-                    option.style.display = "block";
-                } else {
-                    option.style.display = "none";
-                }
+{% block title %}
+Home
+{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to ProScout</h1>
+    <p class="lead">Get recommendations for players based on various performance metrics.</p>
+    <p class="lead">Select a player from the dropdown menu below to get started.</p>
+    <p class="mark">Note: Results are based on a single dataset (You can view Dataset from navigation bar)</p>
+
+    <hr class="my-4">
+    <form action="/submit_player" method="post">
+        <div class="form-group">
+            <label for="player">Player</label>
+            <select class="form-control" id="player" name="player">
+                {% for player in players %}
+                    <option value="{{ player }}">{{ player }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Submit</button>
+    </form>
+</div>
+
+<script>
+    const selectElement = document.getElementById("player");
+    const options = selectElement.getElementsByTagName("option");
+    selectElement.addEventListener("input", function () {
+        const inputValue = this.value.toLowerCase();
+        for (let i = 0; i < options.length; i++) {
+            const option = options[i];
+            const optionValue = option.textContent.toLowerCase();
+            if (optionValue.includes(inputValue)) {
+                option.style.display = "block";
+            } else {
+                option.style.display = "none";
             }
-        });
-    </script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+        }
+    });
+</script> 
+
+{% endblock %}
+
