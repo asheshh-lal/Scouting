@@ -10,5 +10,3 @@
 
 For API docs
 > localhost:8000/docs
-
-Has swagger as default ;)
