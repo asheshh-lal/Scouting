@@ -69,7 +69,7 @@ async def submit_player(request: Request, player: str = Form(...)):
         row = await cursor.fetchone()
     rk = row[0] if row else "No Rk found for this player"
     similar_players = await find_similar_players(rk)
-    radar_charts = await generate_radar_charts(similar_players)
+    radar_charts = await generate_radar_charts(similar_players,rk)
     return templates.TemplateResponse("similar_players.html", {"request": request, "radar_charts": radar_charts})
 
 async def find_similar_players(player_id):
@@ -128,18 +128,48 @@ async def find_similar_players(player_id):
         similarities = similarities[0] * 100
         similar_players_cluster_df.loc[:, 'Similarity'] = similarities
         similar_players_cluster_df = similar_players_cluster_df.sort_values(by='Similarity', ascending=False)
-        similar_players_cluster_df = similar_players_cluster_df.iloc[1:11]
+        similar_players_cluster_df = similar_players_cluster_df.iloc[0:11]
         similar_players_cluster_df = df[df['Rk'].isin(similar_players_cluster_df['Rk'])]
 
     return similar_players_cluster_df
 
-async def generate_radar_charts(similar_players_df):
-    params = ['Expected xG', 'Performance G+A', 'Expected xG', 
-              'Standard Dist', 'Performance CS', 'Total Att', 
-              'Aerial Duels Won', 'Standard SoT%', 'Total PrgDist']
+async def generate_radar_charts(similar_players_df,player_id):
+    
+    player_row = similar_players_df[similar_players_df['Rk'] == player_id]['Pos'].iloc[0]
+    # Check the player's position and define radar chart parameters accordingly
+    if player_row in ['FW', 'MF,FW', 'FW,MF']:
+        # Define parameters for the radar chart for Forwards
+        params = [
+            'Expected xG', 'Standard Sh', 'Standard SoT%',
+            'Standard Sh/90', 'Aerial Duels Won%', 'Total Att',
+            'Total TotDist', 'Total PrgDist'
+        ]
+    elif player_row in ['DF', 'DF,FW', 'DF,MF', 'FW,DF']:
+        # Define parameters for the radar chart for Defenders
+        params = [
+            'Expected xG', 'Tackles Tkl', 'Tackles TklW',
+            'Tackles Def 3rd', 'Tackles Mid 3rd', 'Challenges Tkl%',
+            'Blocks Blocks', 'Blocks Pass'
+        ]
+    elif player_row == 'GK':
+        # Define parameters for the radar chart for Goalkeepers
+        params = [
+            "Performance GA", "Performance SoTA", "Performance Saves",
+            "Performance Save%", "Performance CS", "Performance CS%",
+            "Penalty Kicks PKatt", "Penalty Kicks Save%"
+        ]
+    elif player_row in ['MF', 'MF,DF']:
+        # Define default parameters or handle cases not covered
+        params = [
+            'Expected xA', 'Progression PrgC', 'KP', '1/3', 'PPA',
+            'CrsPA', 'Total Cmp%', 'Total TotDist'
+        ]
+    else:
+        # Handle other cases or define default parameters
+        params = []
+    similar_players_df = similar_players_df.iloc[1:]
     low = []
     high = []
-
     for param in params:
         low.append(similar_players_df[param].min())
         high.append(similar_players_df[param].max())
