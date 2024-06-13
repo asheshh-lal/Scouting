@@ -217,6 +217,8 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
     else:
         description = "<p>No description available.</p>"
 
+
+
     for idx in range(len(similar_players_cluster_df)):
         player_name = similar_players_cluster_df.iloc[idx]['Player']
         player_val = similar_players_cluster_df.iloc[idx][params].values
@@ -243,7 +245,7 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
     return radar_charts
 
 def generate_prompt(row):
-    prompt = f"Player {row['Player']} has good shooting attribute. Create a short player report"
+    prompt = f"Player list = {row['Player']}. Share jokes related to these players."
     return prompt
 
 
