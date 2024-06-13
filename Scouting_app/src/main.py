@@ -29,6 +29,9 @@ def quote_column_name(column_name):
 async def upload_csv_on_startup():
     # Acquire lock to ensure exclusive access to the database during startup
     async with database_lock:
+        if os.path.exists(DATABASE_URL):
+            os.remove(DATABASE_URL)
+
         with open("Final_player_cluster_df.csv", "r") as file:
             reader = csv.DictReader(file)
             rows = list(reader)
