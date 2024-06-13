@@ -1,7 +1,10 @@
 import os
 import csv
-import asyncio
-import aiosqlite
+import pathlib
+import textwrap
+import markdown
+import markdown2
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,15 +12,23 @@ from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+
+import asyncio
+import aiosqlite
 from aiosqlite import connect as aiosqlite_connect
+
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
+
+import google.generativeai as genai
+from gemini import Gemini
 from mplsoccer import Radar, FontManager, grid
 
 DATABASE_URL = "player.db"
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+templates.env.filters["markdown"] = lambda text: markdown2.markdown(text)   
 
 # Create lock to synchronize access to the database during startup
 database_lock = asyncio.Lock()
@@ -74,6 +85,7 @@ async def submit_player(request: Request, player: str = Form(...)):
     rk = row[0] if row else "No Rk found for this player"
     similar_players = await find_similar_players(rk)
     radar_charts = await generate_radar_charts(similar_players, rk)
+
     return templates.TemplateResponse("similar_players.html", {"request": request, "radar_charts": radar_charts, "players": similar_players})
 
 async def find_similar_players(player_id):
@@ -199,6 +211,14 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
 
     radar_charts = []
 
+    description = fetch_gemini_results(similar_players_cluster_df)
+    if description:
+        description = markdown2.markdown(description)
+    else:
+        description = "<p>No description available.</p>"
+
+
+
     for idx in range(len(similar_players_cluster_df)):
         player_name = similar_players_cluster_df.iloc[idx]['Player']
         player_val = similar_players_cluster_df.iloc[idx][params].values
@@ -219,12 +239,34 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
         plt.savefig(img_path)
         plt.close() 
         img_path_for_template = f'RadarChart_{player_name}.png'
-        radar_charts.append((player_name, img_path_for_template))
+
+        radar_charts.append((player_name, img_path_for_template, description))
 
     return radar_charts
 
+def generate_prompt(row):
+    prompt = f"Player list = {row['Player']}. Share jokes related to these players."
+    return prompt
 
 
+def fetch_gemini_results(similar_players_cluster_df):
+    # Using gemini-1.0-pro, the first one seems to be limited bruh :(
+    model = genai.GenerativeModel('gemini-pro')
+    os.environ['GOOGLE_API_KEY'] = "AIzaSyDqiBvz-_Ng3ZdUl53n1oViYF-tfx18RzM"
+    genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
+    prompts = similar_players_cluster_df.apply(generate_prompt, axis=1)
+    responses = []
 
+    for prompt in prompts:
+        response = model.generate_content(prompt, stream=True)
+        response_text = ""
+        for chunk in response:
+            if chunk.parts:
+                for part in chunk.parts:
+                    response_text += part.text
+            else:
+                print("No valid parts found in the response.")
+        responses.append(response_text)
 
-
+    combined_response = "\n".join(responses)
+    return combined_response

@@ -10,10 +10,10 @@ Player Recommendation
 <!-- Nav tabs -->
 <ul class="nav nav-tabs" id="myTab" role="tablist">
   <li class="nav-item">
-    <a class="nav-link navbar active" id="radar-tab" data-toggle="tab" href="#radar" role="tab" aria-controls="radar" aria-selected="true">Radar Chart View</a>
+    <a class="nav-link active" id="radar-tab" data-toggle="tab" href="#radar" role="tab" aria-controls="radar" aria-selected="true">Radar Chart View</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link navbar" id="table-tab" data-toggle="tab" href="#table" role="tab" aria-controls="table" aria-selected="false">Tabular View</a>
+    <a class="nav-link" id="table-tab" data-toggle="tab" href="#table" role="tab" aria-controls="table" aria-selected="false">Tabular View</a>
   </li>
 </ul>
 
@@ -22,18 +22,28 @@ Player Recommendation
   <!-- Radar Chart View Tab -->
   <div class="tab-pane fade show active" id="radar" role="tabpanel" aria-labelledby="radar-tab">
     <div class="row">
-      {% for player_name, img_path_for_template in radar_charts %}
-      <div class="col-md-6">
+      {% for player_name, img_path_for_template, description in radar_charts %}
+      <div class="col-md-12 mb-4">
         <div class="card player-card">
           <h5 class="card-header">Player: {{ player_name }}</h5>
-          <div class="card-body">
-            <img src="../static/{{ img_path_for_template }}" class="card-img-top" alt="Radar Chart for {{ player_name }}">
+          <div class="row no-gutters">
+            <div class="col-md-6">
+              <img src="../static/{{ img_path_for_template }}" class="card-img" alt="Radar Chart for {{ player_name }}">
+            </div>
+            <div class="col-md-6">
+              <div class="card-body">
+                <p><strong>Description:</strong></p>
+                <div class="card-text">
+                    {{ description|safe }} {# Use "|safe" to render HTML content #}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       {% endfor %}
     </div>
-    <div style="padding: 10px"></div>
+    <div style="margin-top: 50px;"></div>
   </div>
 
   <!-- Tabular View Tab -->
