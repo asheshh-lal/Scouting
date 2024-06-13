@@ -6,17 +6,59 @@ Player Recommendation
 
 {% block content %}
 <h2 class="mt-4 mb-4">Player Recommendation</h2>
-<div class="row">
-    {% for player_name, img_path_for_template in radar_charts %}
-    <div class="col-md-6">
+
+<!-- Nav tabs -->
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link navbar active" id="radar-tab" data-toggle="tab" href="#radar" role="tab" aria-controls="radar" aria-selected="true">Radar Chart View</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link navbar" id="table-tab" data-toggle="tab" href="#table" role="tab" aria-controls="table" aria-selected="false">Tabular View</a>
+  </li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content" id="myTabContent">
+  <!-- Radar Chart View Tab -->
+  <div class="tab-pane fade show active" id="radar" role="tabpanel" aria-labelledby="radar-tab">
+    <div class="row">
+      {% for player_name, img_path_for_template in radar_charts %}
+      <div class="col-md-6">
         <div class="card player-card">
-            <h5 class="card-header">Player: {{ player_name }}</h5>
-            <div class="card-body">
-                <img src="../static/{{ img_path_for_template }}" class="card-img-top"
-                    alt="Radar Chart for {{ player_name }}">
-            </div>
+          <h5 class="card-header">Player: {{ player_name }}</h5>
+          <div class="card-body">
+            <img src="../static/{{ img_path_for_template }}" class="card-img-top" alt="Radar Chart for {{ player_name }}">
+          </div>
         </div>
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
+    <div style="padding: 10px"></div>
+  </div>
+
+  <!-- Tabular View Tab -->
+  <div class="tab-pane fade" id="table" role="tabpanel" aria-labelledby="table-tab">
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    {% for col in players.columns %}
+                        <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in players.iterrows() %}
+                    <tr>
+                        {% for col in players.columns %}
+                            <td>{{ player[1][col] }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+  </div>
 </div>
+
 {% endblock %}

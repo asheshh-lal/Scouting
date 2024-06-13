@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse
 from aiosqlite import connect as aiosqlite_connect
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
+from mplsoccer import Radar, FontManager, grid
 
 DATABASE_URL = "player.db"
 app = FastAPI()
@@ -28,6 +29,9 @@ def quote_column_name(column_name):
 async def upload_csv_on_startup():
     # Acquire lock to ensure exclusive access to the database during startup
     async with database_lock:
+        if os.path.exists(DATABASE_URL):
+            os.remove(DATABASE_URL)
+
         with open("Final_player_cluster_df.csv", "r") as file:
             reader = csv.DictReader(file)
             rows = list(reader)
@@ -69,8 +73,8 @@ async def submit_player(request: Request, player: str = Form(...)):
         row = await cursor.fetchone()
     rk = row[0] if row else "No Rk found for this player"
     similar_players = await find_similar_players(rk)
-    radar_charts = await generate_radar_charts(similar_players)
-    return templates.TemplateResponse("similar_players.html", {"request": request, "radar_charts": radar_charts})
+    radar_charts = await generate_radar_charts(similar_players, rk)
+    return templates.TemplateResponse("similar_players.html", {"request": request, "radar_charts": radar_charts, "players": similar_players})
 
 async def find_similar_players(player_id):
     async with aiosqlite_connect(DATABASE_URL) as db:
@@ -128,43 +132,89 @@ async def find_similar_players(player_id):
         similarities = similarities[0] * 100
         similar_players_cluster_df.loc[:, 'Similarity'] = similarities
         similar_players_cluster_df = similar_players_cluster_df.sort_values(by='Similarity', ascending=False)
-        similar_players_cluster_df = similar_players_cluster_df.iloc[1:11]
+        similar_players_cluster_df = similar_players_cluster_df.iloc[0:11]
         similar_players_cluster_df = df[df['Rk'].isin(similar_players_cluster_df['Rk'])]
 
     return similar_players_cluster_df
 
-async def generate_radar_charts(similar_players_df):
-    params = ['Expected xG', 'Performance G+A', 'Expected xG', 
-              'Standard Dist', 'Performance CS', 'Total Att', 
-              'Aerial Duels Won', 'Standard SoT%', 'Total PrgDist']
+
+async def generate_radar_charts(similar_players_cluster_df, player_id):
+    player_row = similar_players_cluster_df[similar_players_cluster_df['Rk'] == player_id]['Pos'].iloc[0]
+    
+    if player_row in ['FW', 'MF,FW', 'FW,MF']:
+        params = [
+            'Expected xG', 'Standard Sh', 'Standard SoT%',
+            'Standard Sh/90', 'Aerial Duels Won%', 'Total Att',
+            'Total TotDist', 'Total PrgDist'
+        ]
+    elif player_row in ['DF', 'DF,FW', 'DF,MF', 'FW,DF']:
+        params = [
+            'Expected xG', 'Tackles Tkl', 'Tackles TklW',
+            'Tackles Def 3rd', 'Tackles Mid 3rd', 'Challenges Tkl%',
+            'Blocks Blocks', 'Blocks Pass'
+        ]
+    elif player_row == 'GK':
+        params = [
+            "Performance GA", "Performance SoTA", "Performance Saves",
+            "Performance Save%", "Performance CS", "Performance CS%",
+            "Penalty Kicks PKatt", "Penalty Kicks Save%"
+        ]
+    elif player_row in ['MF', 'MF,DF']:
+        params = [
+            'Expected xA', 'Progression PrgC', 'KP', '1/3', 'PPA',
+            'CrsPA', 'Total Cmp%', 'Total TotDist'
+        ]
+    else:
+        params = []
+
+    print(f"Parameters: {params}")
+
+    # Convert relevant columns to numeric
+    similar_players_cluster_df[params] = similar_players_cluster_df[params].apply(pd.to_numeric, errors='coerce')
+
+    # Filter out the reference player (if applicable)
+    if player_id in similar_players_cluster_df['Rk'].values:
+        similar_players_cluster_df = similar_players_cluster_df[similar_players_cluster_df['Rk'] != player_id]
+
+    # Calculate min and max values for radar chart axes
     low = []
     high = []
-
-    for param in params:
-        low.append(similar_players_df[param].min())
-        high.append(similar_players_df[param].max())
 
     static_dir = 'static'
     for filename in os.listdir(static_dir):
         if filename.endswith(".png"):
             os.remove(os.path.join(static_dir, filename))
 
+    for param in params:
+        low.append(similar_players_cluster_df[param].min())
+        high.append(similar_players_cluster_df[param].max())
+
+    # Initialize Radar chart
+    radar = Radar(params, low, high,
+                    round_int=[False]*len(params),
+                    num_rings=4,
+                    ring_width=0.4,
+                    center_circle_radius=0.1
+                  )
+
     radar_charts = []
 
-    for idx in range(len(similar_players_df)):
-        player_name = similar_players_df.iloc[idx]['Player']
-        player_val = similar_players_df.iloc[idx][params].values
-        fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
-        
-        theta = np.linspace(0, 2 * np.pi, len(params) + 1, endpoint=False).tolist()
-        values = player_val.tolist()
-        values += values[:1]
-        ax.fill(theta, values, 'b', alpha=0.25)
-        ax.plot(theta, values, 'b', alpha=0.5)
-        
-        ax.set_xticks(theta[:-1])
-        ax.set_xticklabels(params)
-        
+    for idx in range(len(similar_players_cluster_df)):
+        player_name = similar_players_cluster_df.iloc[idx]['Player']
+        player_val = similar_players_cluster_df.iloc[idx][params].values
+
+        fig, ax = radar.setup_axis()
+
+        rings_inner = radar.draw_circles(ax=ax, facecolor='#ffb2b2', edgecolor='#fc5f5f')
+        radar_output = radar.draw_radar(player_val, ax=ax,
+                                        kwargs_radar={'facecolor': '#aa65b2'},
+                                        kwargs_rings={'facecolor': '#66d8ba'})
+        radar_poly, rings_outer, vertices = radar_output
+        range_labels = radar.draw_range_labels(ax=ax, fontsize=15)
+        param_labels = radar.draw_param_labels(ax=ax, fontsize=15)
+        title = ax.set_title(f'Radar Chart for {player_name}', fontsize=20)
+        title.set_position([0.5, 1.5])
+
         img_path = f'static/RadarChart_{player_name}.png'
         plt.savefig(img_path)
         plt.close() 
@@ -172,5 +222,9 @@ async def generate_radar_charts(similar_players_df):
         radar_charts.append((player_name, img_path_for_template))
 
     return radar_charts
+
+
+
+
 
 
