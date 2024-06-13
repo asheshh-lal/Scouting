@@ -211,6 +211,12 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
 
     radar_charts = []
 
+    description = fetch_gemini_results(similar_players_cluster_df)
+    if description:
+        description = markdown2.markdown(description)
+    else:
+        description = "<p>No description available.</p>"
+
     for idx in range(len(similar_players_cluster_df)):
         player_name = similar_players_cluster_df.iloc[idx]['Player']
         player_val = similar_players_cluster_df.iloc[idx][params].values
@@ -232,59 +238,21 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
         plt.close() 
         img_path_for_template = f'RadarChart_{player_name}.png'
 
-        description = fetch_gemini_results(similar_players_cluster_df, player_id)
-        if description:
-            description = markdown2.markdown(description)
-        else:
-            description = "<p>No description available.</p>"
         radar_charts.append((player_name, img_path_for_template, description))
 
     return radar_charts
 
 def generate_prompt(row):
-    prompt = f"Player {row['Player']} has good shooting attribute. Create a short player report. limit to 100 words"
+    prompt = f"Player {row['Player']} has good shooting attribute. Create a short player report"
     return prompt
 
 
-def fetch_gemini_results(similar_players_cluster_df, player_id):
+def fetch_gemini_results(similar_players_cluster_df):
     # Using gemini-1.0-pro, the first one seems to be limited bruh :(
     model = genai.GenerativeModel('gemini-pro')
     os.environ['GOOGLE_API_KEY'] = "AIzaSyDqiBvz-_Ng3ZdUl53n1oViYF-tfx18RzM"
     genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
-
-    if player_id not in similar_players_cluster_df['Rk'].values:
-        return "Player with ID {player_id} not found in the database."
-
-    player_row = similar_players_cluster_df[similar_players_cluster_df['Rk'] == player_id].iloc[0]
-
-    if player_row['Pos'] in ['FW', 'MF,FW', 'FW,MF']:
-        params = [
-            'Expected xG', 'Standard Sh', 'Standard SoT%',
-            'Standard Sh/90', 'Aerial Duels Won%', 'Total Att',
-            'Total TotDist', 'Total PrgDist'
-        ]
-    elif player_row['Pos'] in ['DF', 'DF,FW', 'DF,MF', 'FW,DF']:
-        params = [
-            'Expected xG', 'Tackles Tkl', 'Tackles TklW',
-            'Tackles Def 3rd', 'Tackles Mid 3rd', 'Challenges Tkl%',
-            'Blocks Blocks', 'Blocks Pass'
-        ]
-    elif player_row['Pos'] == 'GK':
-        params = [
-            "Performance GA", "Performance SoTA", "Performance Saves",
-            "Performance Save%", "Performance CS", "Performance CS%",
-            "Penalty Kicks PKatt", "Penalty Kicks Save%"
-        ]
-    elif player_row['Pos'] in ['MF', 'MF,DF']:
-        params = [
-            'Expected xA', 'Progression PrgC', 'KP', '1/3', 'PPA',
-            'CrsPA', 'Total Cmp%', 'Total TotDist'
-        ]
-    else:
-        params = []
-
     prompts = similar_players_cluster_df.apply(generate_prompt, axis=1)
-
     responses = []
 
     for prompt in prompts:
