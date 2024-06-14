@@ -32,11 +32,8 @@ Player Recommendation
             </div>
             <div class="col-md-6">
               <div class="card-body">
-                <button class="btn btn-primary view-report-btn">View Report</button>
-                <div class="card-text description" style="display: none;">
-                  <p>Hola Amigo, your prompt goes here.</p>
-                    <!-- {{ description|safe }} {# Use "|safe" to render HTML content #} -->
-                </div>
+                <button class="btn btn-primary view-report-btn" data-player-name="{{ player_name }}">View Report</button>
+                <div class="card-text description" style="display: none;"></div>
               </div>
             </div>
           </div>
@@ -77,14 +74,28 @@ Player Recommendation
     var buttons = document.querySelectorAll('.view-report-btn');
     buttons.forEach(function(button) {
       button.addEventListener('click', function() {
-        var description = this.nextElementSibling;
-        if (description.style.display === 'none') {
-          description.style.display = 'block';
-          this.textContent = 'Hide Report';
-        } else {
-          description.style.display = 'none';
-          this.textContent = 'View Report';
-        }
+        var playerName = this.getAttribute('data-player-name');
+        var descriptionDiv = this.nextElementSibling;
+        
+        fetch('/view-description', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ player_name: playerName }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          descriptionDiv.innerHTML = data.description;
+          if (descriptionDiv.style.display === 'none') {
+            descriptionDiv.style.display = 'block';
+            this.textContent = 'Hide Report';
+          } else {
+            descriptionDiv.style.display = 'none';
+            this.textContent = 'View Report';
+          }
+        })
+        .catch(error => console.error('Error:', error));
       });
     });
   });

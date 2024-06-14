@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 import asyncio
 import aiosqlite
@@ -181,14 +181,10 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
 
     print(f"Parameters: {params}")
 
-    # Convert relevant columns to numeric
     similar_players_cluster_df[params] = similar_players_cluster_df[params].apply(pd.to_numeric, errors='coerce')
-
-    # Filter out the reference player (if applicable)
     if player_id in similar_players_cluster_df['Rk'].values:
         similar_players_cluster_df = similar_players_cluster_df[similar_players_cluster_df['Rk'] != player_id]
 
-    # Calculate min and max values for radar chart axes
     low = []
     high = []
 
@@ -201,7 +197,6 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
         low.append(similar_players_cluster_df[param].min())
         high.append(similar_players_cluster_df[param].max())
 
-    # Initialize Radar chart
     radar = Radar(params, low, high,
                     round_int=[False]*len(params),
                     num_rings=4,
@@ -210,14 +205,6 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
                   )
 
     radar_charts = []
-
-    # description = fetch_gemini_results(similar_players_cluster_df)
-    # if description:
-    #     description = markdown2.markdown(description)
-    # else:
-    #     description = "<p>No description available.</p>"
-
-
 
     for idx in range(len(similar_players_cluster_df)):
         player_name = similar_players_cluster_df.iloc[idx]['Player']
@@ -244,29 +231,43 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
 
     return radar_charts
 
-def generate_prompt(row):
-    prompt = f"Player list = {row['Player']}. Share jokes related to these players."
+def generate_prompt(player_name):
+    prompt = f"Player list = {player_name}. Give short stat report for this player."
     return prompt
 
-
-def fetch_gemini_results(similar_players_cluster_df):
-    # Using gemini-1.0-pro, the first one seems to be limited bruh :(
+def fetch_gemini_results(player_name):
     model = genai.GenerativeModel('gemini-pro')
     os.environ['GOOGLE_API_KEY'] = "AIzaSyDqiBvz-_Ng3ZdUl53n1oViYF-tfx18RzM"
     genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
-    prompts = similar_players_cluster_df.apply(generate_prompt, axis=1)
-    responses = []
+    
+    prompt = generate_prompt(player_name)
+    
+    response = model.generate_content(prompt, stream=True)
+    response_text = ""
+    for chunk in response:
+        if chunk.parts:
+            for part in chunk.parts:
+                response_text += part.text
+        else:
+            print("No valid parts found in the response.")
+    
+    description = markdown2.markdown(response_text) if response_text else "<p>No description available.</p>"
+    return description
 
-    for prompt in prompts:
-        response = model.generate_content(prompt, stream=True)
-        response_text = ""
-        for chunk in response:
-            if chunk.parts:
-                for part in chunk.parts:
-                    response_text += part.text
-            else:
-                print("No valid parts found in the response.")
-        responses.append(response_text)
+@app.post("/view-description")
+async def view_description(request: Request):
+    data = await request.json()
+    player_name = data.get('player_name')
 
-    combined_response = "\n".join(responses)
-    return combined_response
+    async with aiosqlite.connect(DATABASE_URL) as db:
+        cursor = await db.execute("SELECT DISTINCT * FROM data WHERE Player = ?", (player_name,))
+        rows = await cursor.fetchall()
+        columns = [desc[0] for desc in cursor.description]
+        df = pd.DataFrame(rows, columns=columns)
+
+    if df.empty:
+        description = "<p>No data available for the selected player.</p>"
+    else:
+        description = fetch_gemini_results(player_name)
+
+    return JSONResponse(content={"description": description})
