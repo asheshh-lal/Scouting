@@ -86,7 +86,7 @@ async def submit_player(request: Request, player: str = Form(...)):
     similar_players = await find_similar_players(rk)
     radar_charts = await generate_radar_charts(similar_players, rk)
 
-    return templates.TemplateResponse("similar_players.html", {"request": request, "radar_charts": radar_charts, "players": similar_players})
+    return templates.TemplateResponse("similar_players.html", {"request": request, "radar_charts": radar_charts, "players": similar_players, "player": player})
 
 async def find_similar_players(player_id):
     async with aiosqlite_connect(DATABASE_URL) as db:
@@ -231,16 +231,16 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
 
     return radar_charts
 
-def generate_prompt(player_name):
-    prompt = f"Player list = {player_name}. Give short stat report for this player."
+def generate_prompt(player_name, chosen_player):
+    prompt = f"Player list = {player_name}. Give short stat report for this player. In the final paragraph give a very short comparison of {player_name} and {chosen_player}."
     return prompt
 
-def fetch_gemini_results(player_name):
+def fetch_gemini_results(player_name, chosen_player):
     model = genai.GenerativeModel('gemini-pro')
     os.environ['GOOGLE_API_KEY'] = "AIzaSyDqiBvz-_Ng3ZdUl53n1oViYF-tfx18RzM"
     genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
     
-    prompt = generate_prompt(player_name)
+    prompt = generate_prompt(player_name, chosen_player)
     
     response = model.generate_content(prompt, stream=True)
     response_text = ""
@@ -258,6 +258,7 @@ def fetch_gemini_results(player_name):
 async def view_description(request: Request):
     data = await request.json()
     player_name = data.get('player_name')
+    chosen_player = data.get('player')
 
     async with aiosqlite.connect(DATABASE_URL) as db:
         cursor = await db.execute("SELECT DISTINCT * FROM data WHERE Player = ?", (player_name,))
@@ -268,6 +269,6 @@ async def view_description(request: Request):
     if df.empty:
         description = "<p>No data available for the selected player.</p>"
     else:
-        description = fetch_gemini_results(player_name)
+        description = fetch_gemini_results(player_name, chosen_player)
 
     return JSONResponse(content={"description": description})
