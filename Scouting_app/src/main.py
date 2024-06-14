@@ -21,7 +21,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
 
 import google.generativeai as genai
-from gemini import Gemini
+# from gemini import Gemini
 from mplsoccer import Radar, FontManager, grid
 
 DATABASE_URL = "player.db"
