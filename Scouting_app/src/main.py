@@ -211,11 +211,11 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
 
     radar_charts = []
 
-    description = fetch_gemini_results(similar_players_cluster_df)
-    if description:
-        description = markdown2.markdown(description)
-    else:
-        description = "<p>No description available.</p>"
+    # description = fetch_gemini_results(similar_players_cluster_df)
+    # if description:
+    #     description = markdown2.markdown(description)
+    # else:
+    #     description = "<p>No description available.</p>"
 
 
 
@@ -240,7 +240,7 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
         plt.close() 
         img_path_for_template = f'RadarChart_{player_name}.png'
 
-        radar_charts.append((player_name, img_path_for_template, description))
+        radar_charts.append((player_name, img_path_for_template))
 
     return radar_charts
 

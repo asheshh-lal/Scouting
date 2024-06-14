@@ -22,7 +22,7 @@ Player Recommendation
   <!-- Radar Chart View Tab -->
   <div class="tab-pane fade show active" id="radar" role="tabpanel" aria-labelledby="radar-tab">
     <div class="row">
-      {% for player_name, img_path_for_template, description in radar_charts %}
+      {% for player_name, img_path_for_template in radar_charts %}
       <div class="col-md-12 mb-4">
         <div class="card player-card">
           <h5 class="card-header">Player: {{ player_name }}</h5>
@@ -32,9 +32,10 @@ Player Recommendation
             </div>
             <div class="col-md-6">
               <div class="card-body">
-                <p><strong>Description:</strong></p>
-                <div class="card-text">
-                    {{ description|safe }} {# Use "|safe" to render HTML content #}
+                <button class="btn btn-primary view-report-btn">View Report</button>
+                <div class="card-text description" style="display: none;">
+                  <p>Hola Amigo, your prompt goes here.</p>
+                    <!-- {{ description|safe }} {# Use "|safe" to render HTML content #} -->
                 </div>
               </div>
             </div>
@@ -70,5 +71,23 @@ Player Recommendation
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var buttons = document.querySelectorAll('.view-report-btn');
+    buttons.forEach(function(button) {
+      button.addEventListener('click', function() {
+        var description = this.nextElementSibling;
+        if (description.style.display === 'none') {
+          description.style.display = 'block';
+          this.textContent = 'Hide Report';
+        } else {
+          description.style.display = 'none';
+          this.textContent = 'View Report';
+        }
+      });
+    });
+  });
+</script>
 
 {% endblock %}
