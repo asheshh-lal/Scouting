@@ -85,7 +85,8 @@ async def submit_player(request: Request, player: str = Form(...)):
     rk = row[0] if row else "No Rk found for this player"
     similar_players = await find_similar_players(rk)
     radar_charts = await generate_radar_charts(similar_players, rk)
-
+    # Select rows from index 1 to 10 (inclusive) and drop the "Cluster" column
+    similar_players = similar_players.iloc[1:11].drop("Cluster", axis=1)
     return templates.TemplateResponse("similar_players.html", {"request": request, "radar_charts": radar_charts, "players": similar_players, "player": player})
 
 async def find_similar_players(player_id):
