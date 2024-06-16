@@ -4,6 +4,7 @@ import pathlib
 import textwrap
 import markdown
 import markdown2
+from dotenv import load_dotenv
 
 import numpy as np
 import pandas as pd
@@ -302,8 +303,14 @@ def generate_prompt(df_player_description, df_chosen_player_description):
 
 def fetch_gemini_results(df_player_description,df_chosen_player_description):
     model = genai.GenerativeModel('gemini-pro')
-    os.environ['GOOGLE_API_KEY'] = "AIzaSyDqiBvz-_Ng3ZdUl53n1oViYF-tfx18RzM"
-    genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
+
+    load_dotenv()
+    api_key = os.getenv('GOOGLE_API_KEY')
+    if not api_key:
+        raise ValueError("API key is missing. Please set the GOOGLE_API_KEY environment variable.")
+
+    genai.configure(api_key=api_key)
+
     chosen_player = df_chosen_player_description['Player']
     player_name = df_player_description['Player']
     prompt = generate_prompt(df_player_description,df_chosen_player_description)

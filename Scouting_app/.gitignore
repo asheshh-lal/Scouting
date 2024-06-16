@@ -3,3 +3,4 @@ __pycache__
 sush_env
 static/
 Scouting_app/src/player.db
+.env
