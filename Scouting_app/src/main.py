@@ -234,13 +234,13 @@ async def generate_radar_charts(similar_players_cluster_df, player_id):
 
 def generate_prompt(df_player_description, df_chosen_player_description):
     # General player stats
-    params = ['Player', 'Pos', 'Squad', 'Age', 'Nation','Playing Time MP']
+    params = ['Player', 'Pos', 'Squad', 'Age', 'Nation', 'Playing Time MP']
 
     # for player
-    (player_player, player_pos, player_squad, player_age, player_nation, player_mp) = [df_player_description[param].iloc[0] for param in params]
+    player_player, player_pos, player_squad, player_age, player_nation, player_mp = [df_player_description[param].iloc[0] for param in params]
 
     # for chosen player
-    (chosen_player_player, chosen_player_pos, chosen_player_squad, chosen_player_age, chosen_player_nation,chosen_player_mp) = [df_chosen_player_description[param].iloc[0] for param in params]
+    chosen_player_player, chosen_player_pos, chosen_player_squad, chosen_player_age, chosen_player_nation, chosen_player_mp = [df_chosen_player_description[param].iloc[0] for param in params]
 
     if chosen_player_pos in ['FW', 'MF,FW', 'FW,MF']:
         params1 = [
@@ -249,15 +249,11 @@ def generate_prompt(df_player_description, df_chosen_player_description):
             'Total TotDist', 'Total PrgDist'
         ]
 
-        (player_expected_xg, player_standard_sh, player_standard_sot_percent,
-         player_standard_sh_per_90, player_aerial_duels_won_percent, player_total_att,
-         player_total_tot_dist, player_total_prg_dist) = [df_player_description[param].iloc[0] for param in params1]
+        player_expected_xg, player_standard_sh, player_standard_sot_percent, player_standard_sh_per_90, player_aerial_duels_won_percent, player_total_att, player_total_tot_dist, player_total_prg_dist = [df_player_description[param].iloc[0] for param in params1]
 
-        (chosen_player_expected_xg, chosen_player_standard_sh, chosen_player_standard_sot_percent,
-         chosen_player_standard_sh_per_90, chosen_player_aerial_duels_won_percent, chosen_player_total_att,
-         chosen_player_total_tot_dist, chosen_player_total_prg_dist) = [df_chosen_player_description[param].iloc[0] for param in params1]
+        chosen_player_expected_xg, chosen_player_standard_sh, chosen_player_standard_sot_percent, chosen_player_standard_sh_per_90, chosen_player_aerial_duels_won_percent, chosen_player_total_att, chosen_player_total_tot_dist, chosen_player_total_prg_dist = [df_chosen_player_description[param].iloc[0] for param in params1]
 
-        prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old and has played {player_mp} matches in the 2022-23 season. Now, These are the stats of {player_player} where Expected goal is {player_expected_xg}, player standard shot is {player_standard_sh}, player standard shot on target percent is {player_standard_sot_percent}, player standard shot per 90 minutes is {player_standard_sh_per_90}, aerial duels won percent is {player_aerial_duels_won_percent}, player total attack is {player_total_att}, total player distance covered {player_total_tot_dist} and finally total player progressive distance covered is {player_total_prg_dist}. Now, these are the stats for {chosen_player_player} where Expected goal is {chosen_player_expected_xg}, player standard shot is {chosen_player_standard_sh}, player standard shot on target percent is {chosen_player_standard_sot_percent}, player standard shot per 90 minutes is {chosen_player_standard_sh_per_90}, aerial duels won percent is {chosen_player_aerial_duels_won_percent}, player total attack is {chosen_player_total_att}, total player distance covered {chosen_player_total_tot_dist} and finally total player progressive distance covered is {chosen_player_total_prg_dist}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player}.  of about 150 words. No need to show the stats of {chosen_player_player} just show the stats of {player_player}"
+        prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old and has played {player_mp} matches in the 2022-23 season. Now, These are the stats of {player_player} where Expected goal is {player_expected_xg}, player standard shot is {player_standard_sh}, player standard shot on target percent is {player_standard_sot_percent}, player standard shot per 90 minutes is {player_standard_sh_per_90}, aerial duels won percent is {player_aerial_duels_won_percent}, player total attack is {player_total_att}, total player distance covered {player_total_tot_dist} and finally total player progressive distance covered is {player_total_prg_dist}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player} of about 150 words. No need to show the stats of {chosen_player_player} just show the stats of {player_player}"
 
     elif chosen_player_pos in ['DF', 'DF,FW', 'DF,MF', 'FW,DF']:
         params2 = [
@@ -266,15 +262,11 @@ def generate_prompt(df_player_description, df_chosen_player_description):
             'Blocks Blocks', 'Blocks Pass'
         ]
 
-        (player_expected_xg2, player_tackles_tkl2, player_tackles_tklw2,
-         player_tackles_def_3rd2, player_tackles_mid_3rd2, player_challenges_tklp2,
-         player_blocks_blocks2, player_blocks_pass2) = [df_player_description[param].iloc[0] for param in params2]
+        player_expected_xg2, player_tackles_tkl2, player_tackles_tklw2, player_tackles_def_3rd2, player_tackles_mid_3rd2, player_challenges_tklp2, player_blocks_blocks2, player_blocks_pass2 = [df_player_description[param].iloc[0] for param in params2]
 
-        (chosen_player_expected_xg2, chosen_player_tackles_tkl2, chosen_player_tackles_tklw2,
-         chosen_player_tackles_def_3rd2, chosen_player_tackles_mid_3rd2, chosen_player_challenges_tklp2,
-         chosen_player_blocks_blocks2, chosen_player_blocks_pass2) = [df_chosen_player_description[param].iloc[0] for param in params2]
+        chosen_player_expected_xg2, chosen_player_tackles_tkl2, chosen_player_tackles_tklw2, chosen_player_tackles_def_3rd2, chosen_player_tackles_mid_3rd2, chosen_player_challenges_tklp2, chosen_player_blocks_blocks2, chosen_player_blocks_pass2 = [df_chosen_player_description[param].iloc[0] for param in params2]
 
-        prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old and has played {player_mp} matches in the 2022-23 season. Now, These are the stats of {player_player} where Expected goal is {player_expected_xg2}, tackles are {player_tackles_tkl2}, tackles won are {player_tackles_tklw2}, tackles in defensive 3rd are {player_tackles_def_3rd2}, tackles in middle 3rd are {player_tackles_mid_3rd2}, challenges tackle percent is {player_challenges_tklp2}, blocks are {player_blocks_blocks2}, passes blocked are {player_blocks_pass2}. Now, these are the stats for {chosen_player_player} where Expected goal is {chosen_player_expected_xg2}, tackles are {chosen_player_tackles_tkl2}, tackles won are {chosen_player_tackles_tklw2}, tackles in defensive 3rd are {chosen_player_tackles_def_3rd2}, tackles in middle 3rd are {chosen_player_tackles_mid_3rd2}, challenges tackle percent is {chosen_player_challenges_tklp2}, blocks are {chosen_player_blocks_blocks2}, passes blocked are {chosen_player_blocks_pass2}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player} of about 150 words. No need to show the stats of {chosen_player_player} just show the stats of {player_player}"
+        prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old and has played {player_mp} matches in the 2022-23 season. Now, These are the stats of {player_player} where Expected goal is {player_expected_xg2}, tackles are {player_tackles_tkl2}, tackles won are {player_tackles_tklw2}, tackles in defensive 3rd are {player_tackles_def_3rd2}, tackles in middle 3rd are {player_tackles_mid_3rd2}, challenges tackle percent is {player_challenges_tklp2}, blocks are {player_blocks_blocks2}, passes blocked are {player_blocks_pass2}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player} of about 150 words. No need to show the stats of {chosen_player_player} just show the stats of {player_player}"
 
     elif chosen_player_pos == 'GK':
         params3 = [
@@ -283,15 +275,11 @@ def generate_prompt(df_player_description, df_chosen_player_description):
             "Penalty Kicks PKatt", "Penalty Kicks Save%"
         ]
 
-        (player_performance_ga, player_performance_sota, player_performance_saves,
-         player_performance_save_percent, player_performance_cs, player_performance_cs_percent,
-         player_penalty_kicks_pkatt, player_penalty_kicks_save_percent) = [df_player_description[param].iloc[0] for param in params3]
+        player_performance_ga, player_performance_sota, player_performance_saves, player_performance_save_percent, player_performance_cs, player_performance_cs_percent, player_penalty_kicks_pkatt, player_penalty_kicks_save_percent = [df_player_description[param].iloc[0] for param in params3]
 
-        (chosen_player_performance_ga, chosen_player_performance_sota, chosen_player_performance_saves,
-         chosen_player_performance_save_percent, chosen_player_performance_cs, chosen_player_performance_cs_percent,
-         chosen_player_penalty_kicks_pkatt, chosen_player_penalty_kicks_save_percent) = [df_chosen_player_description[param].iloc[0] for param in params3]
+        chosen_player_performance_ga, chosen_player_performance_sota, chosen_player_performance_saves, chosen_player_performance_save_percent, chosen_player_performance_cs, chosen_player_performance_cs_percent, chosen_player_penalty_kicks_pkatt, chosen_player_penalty_kicks_save_percent = [df_chosen_player_description[param].iloc[0] for param in params3]
 
-        prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old and has played {player_mp} matches in the 2022-23 season. Now, These are the stats of {player_player} where Goals Against are {player_performance_ga}, Shots on Target Against are {player_performance_sota}, Saves are {player_performance_saves}, Save percentage is {player_performance_save_percent}, Clean Sheets are {player_performance_cs}, Clean Sheet percentage is {player_performance_cs_percent}, Penalty Kicks Attempted are {player_penalty_kicks_pkatt}, Penalty Kicks Save percentage is {player_penalty_kicks_save_percent}. Now, these are the stats for {chosen_player_player} where Goals Against are {chosen_player_performance_ga}, Shots on Target Against are {chosen_player_performance_sota}, Saves are {chosen_player_performance_saves}, Save percentage is {chosen_player_performance_save_percent}, Clean Sheets are {chosen_player_performance_cs}, Clean Sheet percentage is {chosen_player_performance_cs_percent}, Penalty Kicks Attempted are {chosen_player_penalty_kicks_pkatt}, Penalty Kicks Save percentage is {chosen_player_penalty_kicks_save_percent}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player} of about 150 words. No need to show the stats of {chosen_player_player} just show the stats of {player_player}"
+        prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old and has played {player_mp} matches in the 2022-23 season. Now, These are the stats of {player_player} where Goals Against are {player_performance_ga}, Shots on Target Against are {player_performance_sota}, Saves are {player_performance_saves}, Save percentage is {player_performance_save_percent}, Clean Sheets are {player_performance_cs}, Clean Sheet percentage is {player_performance_cs_percent}, Penalty Kicks Attempted are {player_penalty_kicks_pkatt}, Penalty Kicks Save percentage is {player_penalty_kicks_save_percent}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player} of about 150 words. No need to show the stats of {chosen_player_player} just show the stats of {player_player}"
 
     elif chosen_player_pos in ['MF', 'MF,DF']:
         params4 = [
@@ -299,113 +287,17 @@ def generate_prompt(df_player_description, df_chosen_player_description):
             'CrsPA', 'Total Cmp%', 'Total TotDist'
         ]
 
-        (player_expected_xa, player_progression_prgc, player_kp,
-         player_1_3, player_ppa, player_crspa,
-         player_total_cmp, player_total_totdist) = [df_player_description[param].iloc[0] for param in params4]
+        player_expected_xa, player_progression_prgc, player_kp, player_1_3, player_ppa, player_crspa, player_total_cmp, player_total_totdist = [df_player_description[param].iloc[0] for param in params4]
 
-        (chosen_player_expected_xa, chosen_player_progression_prgc, chosen_player_kp,
-         chosen_player_1_3, chosen_player_ppa, chosen_player_crspa,
-         chosen_player_total_cmp, chosen_player_total_totdist) = [df_chosen_player_description[param].iloc[0] for param in params4]
+        chosen_player_expected_xa, chosen_player_progression_prgc, chosen_player_kp, chosen_player_1_3, chosen_player_ppa, chosen_player_crspa, chosen_player_total_cmp, chosen_player_total_totdist = [df_chosen_player_description[param].iloc[0] for param in params4]
 
-        prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old and has played {player_mp} matches in the 2022-23 season. Now, These are the stats of {player_player} where Expected assist is {player_expected_xa}, Progressive carries are {player_progression_prgc}, Key passes are {player_kp}, Passes in final third are {player_1_3}, Passes into penalty area are {player_ppa}, Crosses into penalty area are {player_crspa}, Pass completion percentage is {player_total_cmp}, Total passing distance is {player_total_totdist}. Now, these are the stats for {chosen_player_player} where Expected assist is {chosen_player_expected_xa}, Progressive carries are {chosen_player_progression_prgc}, Key passes are {chosen_player_kp}, Passes in final third are {chosen_player_1_3}, Passes into penalty area are {chosen_player_ppa}, Crosses into penalty area are {chosen_player_crspa}, Pass completion percentage is {chosen_player_total_cmp}, Total passing distance is {chosen_player_total_totdist}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player} of about 150 words. No need to show the stats of {chosen_player_player} just show the stats of {player_player}"
+        prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old and has played {player_mp} matches in the 2022-23 season. Now, These are the stats of {player_player} where Expected assist is {player_expected_xa}, Progressive carries are {player_progression_prgc}, Key passes are {player_kp}, Passes in final third are {player_1_3}, Passes into penalty area are {player_ppa}, Crosses into penalty area are {player_crspa}, Pass completion percentage is {player_total_cmp}, Total passing distance is {player_total_totdist}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player} of about 150 words. No need to show the stats of {chosen_player_player} just show the stats of {player_player}"
 
     else:
         prompt = "Sorry, the chosen player position is not supported."
 
     return prompt
 
-
-
-# def generate_prompt(df_player_description,df_chosen_player_description):
-#     ##chosen players are those players that we choose initially
-#     # General player stats
-#     params = ['Player', 'Pos', 'Squad', 'Age', 'Nation']
-
-#     # for player
-#     (player_player, player_pos, player_squad, player_age, player_nation) = [df_player_description[param].iloc[0] for param in params]
-
-#     # for chosen player
-#     (chosen_player_player, chosen_player_pos, chosen_player_squad, chosen_player_age, chosen_player_nation) = [df_chosen_player_description[param].iloc[0] for param in params]
-
-    
-#     # List of parameters to extract values for
-#     params1 = [
-#         'Expected xG', 'Standard Sh', 'Standard SoT%',
-#         'Standard Sh/90', 'Aerial Duels Won%', 'Total Att',
-#         'Total TotDist', 'Total PrgDist'
-#     ]
-
-#     # Extract values for the specified parameters from df_player_description using params
-#     (player_expected_xg, player_standard_sh, player_standard_sot_percent,
-#     player_standard_sh_per_90, player_aerial_duels_won_percent, player_total_att,
-#     player_total_tot_dist, player_total_prg_dist) = [df_player_description[param].iloc[0] for param in params1]
-
-#     # Extract values for the specified parameters from df_chosen_player_description using params
-#     (chosen_player_expected_xg, chosen_player_standard_sh, chosen_player_standard_sot_percent,
-#     chosen_player_standard_sh_per_90, chosen_player_aerial_duels_won_percent, chosen_player_total_att,
-#     chosen_player_total_tot_dist, chosen_player_total_prg_dist) = [df_chosen_player_description[param].iloc[0] for param in params1]
-#     # For defenders
-#     params2 = [
-#         'Expected xG', 'Tackles Tkl', 'Tackles TklW',
-#         'Tackles Def 3rd', 'Tackles Mid 3rd', 'Challenges Tkl%',
-#         'Blocks Blocks', 'Blocks Pass'
-#     ]
-
-#     # Extract values for the specified parameters from df_player_description using params2
-#     (player_expected_xg2, player_tackles_tkl2, player_tackles_tklw2,
-#     player_tackles_def_3rd2, player_tackles_mid_3rd2, player_challenges_tklp2,
-#     player_blocks_blocks2, player_blocks_pass2) = [df_player_description[param].iloc[0] for param in params2]
-
-#     # Extract values for the specified parameters from df_chosen_player_description using params2
-#     (chosen_player_expected_xg2, chosen_player_tackles_tkl2, chosen_player_tackles_tklw2,
-#     chosen_player_tackles_def_3rd2, chosen_player_tackles_mid_3rd2, chosen_player_challenges_tklp2,
-#     chosen_player_blocks_blocks2, chosen_player_blocks_pass2) = [df_chosen_player_description[param].iloc[0] for param in params2]
-
-#     # For goalkeepers
-#     params3 = [
-#         "Performance GA", "Performance SoTA", "Performance Saves",
-#         "Performance Save%", "Performance CS", "Performance CS%",
-#         "Penalty Kicks PKatt", "Penalty Kicks Save%"
-#     ]
-
-#     # Extract values for the specified parameters from df_player_description using params3
-#     (player_performance_ga, player_performance_sota, player_performance_saves,
-#     player_performance_save_percent, player_performance_cs, player_performance_cs_percent,
-#     player_penalty_kicks_pkatt, player_penalty_kicks_save_percent) = [df_player_description[param].iloc[0] for param in params3]
-
-#     # Extract values for the specified parameters from df_chosen_player_description using params3
-#     (chosen_player_performance_ga, chosen_player_performance_sota, chosen_player_performance_saves,
-#     chosen_player_performance_save_percent, chosen_player_performance_cs, chosen_player_performance_cs_percent,
-#     chosen_player_penalty_kicks_pkatt, chosen_player_penalty_kicks_save_percent) = [df_chosen_player_description[param].iloc[0] for param in params3]
-    
-#     # For midfielders
-#     params4 = [
-#         'Expected xA', 'Progression PrgC', 'KP', '1/3', 'PPA',
-#         'CrsPA', 'Total Cmp%', 'Total TotDist'
-#     ]
-
-#     # Extract values for the specified parameters from df_player_description using params
-#     (player_expected_xa, player_progression_prgc, player_kp,
-#     player_1_3, player_ppa, player_crspa,
-#     player_total_cmp, player_total_totdist) = [df_player_description[param].iloc[0] for param in params4]
-
-#     # Extract values for the specified parameters from df_chosen_player_description using params
-#     (chosen_player_expected_xa, chosen_player_progression_prgc, chosen_player_kp,
-#     chosen_player_1_3, chosen_player_ppa, chosen_player_crspa,
-#     chosen_player_total_cmp, chosen_player_total_totdist) = [df_chosen_player_description[param].iloc[0] for param in params4]
-
-#     if chosen_player_pos in ['FW', 'MF,FW', 'FW,MF']:
-#         prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old. Now, These are the stats of {player_player} where Expected goal is {player_expected_xg}, player standard shot is {player_standard_sh}, player standard shot on target percent is {player_standard_sot_percent}, player standard shot per 90 minutes is {player_standard_sh_per_90}, aerial duels won percent is {player_aerial_duels_won_percent}, player total attack is {player_total_att}, total player distance covered {player_total_tot_dist} and finally total player progressive distance covered is {player_total_prg_dist}. Now, these are the stats for {chosen_player_player} where Expected goal is {chosen_player_expected_xg}, player standard shot is {chosen_player_standard_sh}, player standard shot on target percent is {chosen_player_standard_sot_percent}, player standard shot per 90 minutes is {chosen_player_standard_sh_per_90}, aerial duels won percent is {chosen_player_aerial_duels_won_percent}, player total attack is {chosen_player_total_att}, total player distance covered {chosen_player_total_tot_dist} and finally total player progressive distance covered is {chosen_player_total_prg_dist}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player}."
-#     elif chosen_player_pos in ['DF', 'DF,FW', 'DF,MF', 'FW,DF']:
-#         prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old. Now, These are the stats of {player_player} where Expected goal is {player_expected_xg}, player standard shot is {player_standard_sh}, player standard shot on target percent is {player_standard_sot_percent}, player standard shot per 90 minutes is {player_standard_sh_per_90}, aerial duels won percent is {player_aerial_duels_won_percent}, player total attack is {player_total_att}, total player distance covered {player_total_tot_dist} and finally total player progressive distance covered is {player_total_prg_dist}. Now, these are the stats for {chosen_player_player} where Expected goal is {chosen_player_expected_xg}, player standard shot is {chosen_player_standard_sh}, player standard shot on target percent is {chosen_player_standard_sot_percent}, player standard shot per 90 minutes is {chosen_player_standard_sh_per_90}, aerial duels won percent is {chosen_player_aerial_duels_won_percent}, player total attack is {chosen_player_total_att}, total player distance covered {chosen_player_total_tot_dist} and finally total player progressive distance covered is {chosen_player_total_prg_dist}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player}."
-#     elif chosen_player_pos == 'GK':
-#         prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old. Now, These are the stats of {player_player} where Expected goal is {player_expected_xg}, player standard shot is {player_standard_sh}, player standard shot on target percent is {player_standard_sot_percent}, player standard shot per 90 minutes is {player_standard_sh_per_90}, aerial duels won percent is {player_aerial_duels_won_percent}, player total attack is {player_total_att}, total player distance covered {player_total_tot_dist} and finally total player progressive distance covered is {player_total_prg_dist}. Now, these are the stats for {chosen_player_player} where Expected goal is {chosen_player_expected_xg}, player standard shot is {chosen_player_standard_sh}, player standard shot on target percent is {chosen_player_standard_sot_percent}, player standard shot per 90 minutes is {chosen_player_standard_sh_per_90}, aerial duels won percent is {chosen_player_aerial_duels_won_percent}, player total attack is {chosen_player_total_att}, total player distance covered {chosen_player_total_tot_dist} and finally total player progressive distance covered is {chosen_player_total_prg_dist}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player}."
-#     elif chosen_player_pos in ['MF', 'MF,DF']:
-#         prompt = f"Player list = . Give short stat report for {player_player}. The player plays in {player_pos} position, is from {player_nation} nation and plays for {player_squad} team and {player_age} years old. Now, These are the stats of {player_player} where Expected goal is {player_expected_xg}, player standard shot is {player_standard_sh}, player standard shot on target percent is {player_standard_sot_percent}, player standard shot per 90 minutes is {player_standard_sh_per_90}, aerial duels won percent is {player_aerial_duels_won_percent}, player total attack is {player_total_att}, total player distance covered {player_total_tot_dist} and finally total player progressive distance covered is {player_total_prg_dist}. Now, these are the stats for {chosen_player_player} where Expected goal is {chosen_player_expected_xg}, player standard shot is {chosen_player_standard_sh}, player standard shot on target percent is {chosen_player_standard_sot_percent}, player standard shot per 90 minutes is {chosen_player_standard_sh_per_90}, aerial duels won percent is {chosen_player_aerial_duels_won_percent}, player total attack is {chosen_player_total_att}, total player distance covered {chosen_player_total_tot_dist} and finally total player progressive distance covered is {chosen_player_total_prg_dist}. In the final paragraph, give a very short comparison of {player_player} and {chosen_player_player}."
-#     else:
-#         prompt = "Say sorry"
-
-#     return prompt
 
 
 def fetch_gemini_results(df_player_description,df_chosen_player_description):
