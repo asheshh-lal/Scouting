@@ -21,3 +21,4 @@ ProScout is an innovative application designed to assist football teams in ident
 
 
 ![1](https://github.com/asheshh-lal/Scouting/assets/87692027/131664f4-f4d3-4932-9af0-9b69cb8a4100)
+![2](https://github.com/asheshh-lal/Scouting/assets/87692027/59bdeebd-e35e-4d8b-a372-c46cd97ec19e)
