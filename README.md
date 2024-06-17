@@ -19,4 +19,4 @@ ProScout is an innovative application designed to assist football teams in ident
 
 2. Furthermore, to provide a comprehensive analysis, we utilize Gemenai LLM (Language Learning Model) to generate detailed reports. These reports offer a nuanced understanding of the strengths, weaknesses, and overall playing styles of both the original player and the selected candidate. This comparative analysis serves as a valuable tool for clubs, enabling them to make informed decisions regarding player acquisitions and squad management.
 
-![ezgif com-video-to-gif-converter](https://github.com/asheshh-lal/Scouting/assets/87692027/5f287d13-10dd-46bd-b051-2083c79f701d)
+![ezgif com-video-to-gif-converter](https://github.com/asheshh-lal/Scouting/assets/87692027/f5794b2c-edfb-4334-a68a-357481e252b7)
