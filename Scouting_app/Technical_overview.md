@@ -37,7 +37,7 @@ This FastAPI application combines data analysis, Machine learning concepts and L
 
 ### Calculating Similar Players Through Cosine Similarity
 
-Cosine similarity measures the simiarity between two non-zero vectors. It is given by the iner product space. The most common applications of cosine simiarity is text analysis, data mining, and machine learning where the simiarty of the documents are compared and represnted as vectors. However, we have used cosine similarity here to calculate the similairity between two players.
+Cosine similarity measures the simiarity between two non-zero vectors. It is given by the inner product space. The most common applications of cosine simiarity is text analysis, data mining, and machine learning where the simiarty of the documents are compared and represented as vectors. However, we have used cosine similarity here to calculate the similairity between two players.
 
 Cosine Similarity=cos(θ)=∥A∥∥B∥/(A⋅B)
 
@@ -49,8 +49,6 @@ A⋅B is the dot product of
 The cosine simiarity ranges from -1 to 1 where 1 indicates the vectors are identical, 0 indicates the verctors have no similarity and -1 indicates that the vectors are totally opposite.
 
 Similarly, here we have calculated the cosine similarty of a group of players with the selected players and returned the top 10 players. 
-
-Sure, here is the corrected version of your text with grammatical and stylistic improvements:
 
 ### Optimizing the Process through K-Means Clustering
 
